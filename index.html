@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style type="text/css">
+        body {
+            background-color: lightblue;
+            margin: 0;
+            padding: 0;
+        }
+
+        #controls_div {
+            width: calc(25% - 64px);
+            min-width: 200px;
+            display: inline-block;
+            height: 300px;
+            border: 2px solid;
+            border-radius: 25px;
+            padding: 20px;
+            background-color: lightgoldenrodyellow;
+            margin: 0 0 20px 20px;
+        }
+
+        #pickMyOwn, #pickRandom {
+            margin-left: 20px
+        }
+
+        #cityName_label {
+            display: none;
+            color: blue;
+        }
+
+        #pano_div {
+            display: inline-block;
+            height: calc(100vh - 84px);
+            border: 2px solid;
+            border-radius: 25px;
+            padding: 20px;
+            margin: 0 20px 0 20px;
+        }
+    </style>
+</head>
+<body>
+<div id="title_div" style="width: 100%; text-align: center"><h1>Virtual Traveler</h1></div>
+<div id="controls_div">
+    <h3>Where would you like to go today?</h3>
+    <label>
+        <input id="random_radioButton" type="radio" name="choiceType">
+        Pick a city for me
+    </label><br>
+
+    <div id="pickRandom">
+        <label><br><input type="checkbox" id="largeCities_checkBox">Large cities only</label>
+        <label><br><input type="checkbox" id="showCityName_checkBox">Show city name</label>
+        <label id="cityName_label">None</label>
+    </div>
+    <br>
+    <label>
+        <input id="choose_radioButton" type="radio" name="choiceType">
+        Let me pick a city
+    </label><br><br>
+
+    <div id="pickMyOwn">
+        <label for="states_select">State</label>
+        <select id="states_select"></select><br>
+        <label for="cities_select">City</label>
+        <select id="cities_select"></select>
+    </div>
+    <br>
+    <button id="go_button" style="float: right">Go</button>
+</div>
+<div id="pano_div"></div>
+<script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false">
+</script>
+<script src='cities.js'></script>
+<script>
+    (function () {
+        var cityIndex, stateIndex;
+        var title_div = document.getElementById("title_div");
+        var controls_div = document.getElementById("controls_div");
+        var pano_div = document.getElementById("pano_div");
+        var random_radioButton = document.getElementById("random_radioButton");
+        var choose_radioButton = document.getElementById("choose_radioButton");
+        var states_select = document.getElementById("states_select");
+        var cities_select = document.getElementById("cities_select");
+        var largeCities_checkBox = document.getElementById("largeCities_checkBox");
+        var showCityName_checkBox = document.getElementById("showCityName_checkBox");
+        var cityName_label = document.getElementById("cityName_label");
+        var go_button = document.getElementById("go_button");
+        var largeCities = [
+            ['SanFrancisco', 'CA'],
+            ['Washington', 'DC'],
+            ['NewYork', 'NY'],
+            ['Philadelphia', 'PA'],
+            ['Boston', 'MA'],
+            ['Chicago', 'IL'],
+            ['Baltimore', 'MD']
+        ];
+
+        // Initialization
+
+        /*     pano_div.setAttribute("style",
+         "height: calc(100vh - " +
+         (104 + title_div.offsetHeight) +
+         "px); width: calc(100vw - " +
+         (104 + controls_div.offsetWidth) +
+         "px)");
+         console.log(title_div.offsetHeight);
+         console.log(pano_div.offsetHeight);*/
+        random_radioButton.checked = true;
+        largeCities_checkBox.checked = true;
+        showCityName_checkBox.checked = false;
+        function enableRandomCity(enabled) {
+            states_select.disabled = enabled;
+            cities_select.disabled = enabled;
+            largeCities_checkBox.disabled = !enabled;
+            showCityName_checkBox.disabled = !enabled;
+        }
+
+        enableRandomCity(true);
+        function populateStates() {
+            for (var i = 0; i < cityData.length; i++) {
+                var stateOption = document.createElement("option");
+                stateOption.text = cityData[i].name;
+                states_select.add(stateOption);
+            }
+        }
+
+        populateStates();
+        function updateCities() {
+            cities_select.length = 0;
+            for (var j = 0; j < cityData[states_select.selectedIndex].cities.length; j++) {
+                var cityOption = document.createElement("option");
+                cityOption.text = cityData[states_select.selectedIndex].cities[j].name;
+                cities_select.add(cityOption);
+            }
+        }
+
+        updateCities();
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min)) + min;
+        }
+
+        function getRandomFloat(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        // Functions for updating the display
+        var sv = new google.maps.StreetViewService();
+
+        function getPano(latLng, rad) {
+            console.log('Trying ' + latLng.lat + ', ' + latLng.lng + ' with radius=' + rad);
+            sv.getPanoramaByLocation(latLng, rad, function (data, status) {
+                if (status == google.maps.StreetViewStatus.OK) {
+                    var panoramaOptions = {
+                        position: data.location.latLng,
+                        pov: {
+                            heading: getRandomFloat(0, 360),
+                            pitch: -10
+                        },
+                        addressControl: false,
+                        linksControl: false
+                    };
+                    console.log(panoramaOptions);
+                    var panorama = new google.maps.StreetViewPanorama(
+                            pano_div, panoramaOptions);
+                    panorama.setLinks([])
+                } else {
+                    if (rad < 4000) {
+                        getPano(latLng, rad + 50);
+                    }
+                }
+            })
+        }
+
+        function repopulateDropdowns() {
+            states_select.selectedIndex = stateIndex;
+            updateCities();
+            cities_select.selectedIndex = cityIndex;
+        }
+
+        function loadMap() {
+            var city, state;
+            if (random_radioButton.checked) {
+                largeCityIndex = getRandomInt(0, largeCities.length);
+                for (var i = 0; i < cityData.length; i++) {
+                    if (cityData[i].name == largeCities[largeCityIndex][1]) {
+                        for (var j = 0; j < cityData[i].cities.length; j++) {
+                            if (cityData[i].cities[j].name == largeCities[largeCityIndex][0]) {
+                                stateIndex = i;
+                                cityIndex = j;
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                }
+            } else {
+                stateIndex = states_select.selectedIndex;
+                cityIndex = cities_select.selectedIndex;
+            }
+            state = cityData[stateIndex];
+            city = state.cities[cityIndex];
+            cityName_label.innerHTML = city.name + ', ' + state.name;
+            if (showCityName_checkBox.checked) {
+                repopulateDropdowns();
+            }
+            console.log('Using ' + city.name + ', ' + state.name + '(' + city.lat + ', ' + city.lng + ')');
+            var radius = .01;
+            var position = {
+                lat: city.lat + getRandomFloat(-radius, radius),
+                lng: city.lng + getRandomFloat(-radius, radius)
+            };
+            getPano(position, 50);
+        }
+
+        // Event Listeners
+        states_select.addEventListener("change", function (e) {
+            updateCities(e.target)
+        }, false);
+        random_radioButton.addEventListener("click", function () {
+            enableRandomCity(true);
+        }, false);
+        choose_radioButton.addEventListener("click", function () {
+            enableRandomCity(false);
+        }, false);
+        showCityName_checkBox.addEventListener("click", function () {
+            if (showCityName_checkBox.checked) {
+                cityName_label.style.display = 'block';
+                repopulateDropdowns();
+            } else {
+                cityName_label.style.display = 'none';
+            }
+        }, false);
+        go_button.addEventListener("click", loadMap, false);
+        cities_select.addEventListener("change", loadMap, false);
+    }());
+</script>
+</body>
+</html>
