@@ -2,79 +2,79 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <style type="text/css">
-        body {
-            background-color: lightblue;
-            margin: 0;
-            padding: 0;
-        }
-
-        #controls_div {
-            width: calc(25% - 64px);
-            min-width: 200px;
-            display: inline-block;
-            height: 300px;
-            border: 2px solid;
-            border-radius: 25px;
-            padding: 20px;
-            background-color: lightgoldenrodyellow;
-            margin: 0 0 20px 20px;
-        }
-
-        #pickMyOwn, #pickRandom {
-            margin-left: 20px
-        }
-
-        #cityName_label {
-            display: none;
-            color: blue;
-        }
-
-        #pano_div {
-            display: inline-block;
-            height: calc(100vh - 84px);
-            border: 2px solid;
-            border-radius: 25px;
-            padding: 20px;
-            margin: 0 20px 0 20px;
-        }
-    </style>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/main.css" rel="stylesheet">
 </head>
 <body>
-<div id="title_div" style="width: 100%; text-align: center"><h1>Virtual Traveler</h1></div>
-<div id="controls_div">
-    <h3>Where would you like to go today?</h3>
-    <label>
-        <input id="random_radioButton" type="radio" name="choiceType">
-        Pick a city for me
-    </label><br>
+<div class="container">
+    <header>
+        <h1><i class="glyphicon glyphicon-globe"></i> Virtual Traveler</h1>
 
-    <div id="pickRandom">
-        <label><br><input type="checkbox" id="largeCities_checkBox">Large cities only</label>
-        <label><br><input type="checkbox" id="showCityName_checkBox">Show city name</label>
-        <label id="cityName_label">None</label>
-    </div>
-    <br>
-    <label>
-        <input id="choose_radioButton" type="radio" name="choiceType">
-        Let me pick a city
-    </label><br><br>
-
-    <div id="pickMyOwn">
-        <label for="states_select">State</label>
-        <select id="states_select"></select><br>
-        <label for="cities_select">City</label>
-        <select id="cities_select"></select>
-    </div>
-    <br>
-    <button id="go_button" style="float: right">Go</button>
+        <p class="lead">Where would you like to go today?</p>
+    </header>
+    <main>
+        <section id="accordian" class="panel-group">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <a data-toggle="collapse" data-parent="#accordian" href="#autopick">Pick a city for me</a>
+                    </h3>
+                </div>
+                <div id="autopick" class="panel-collapse collapse in">
+                    <div class="panel-body">
+                        <form>
+                            <div class="form-group">
+                                <label for="largeCities_checkBox">Large cities only</label>
+                                <input type="checkbox" id="largeCities_checkBox">
+                            </div>
+                            <div class="form-group">
+                                <label for="showCityName_checkBox">Show city name</label>
+                                <input type="checkbox" id="showCityName_checkBox">
+                                <label id="cityName_label">None</label>
+                            </div>
+                            <div class="form-group">
+                                <input type="submit" id="go_button_auto" class="btn btn-success" value="Go">
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <a data-toggle="collapse" data-parent="#accordian" href="#manualpick">Let me pick</a>
+                    </h3>
+                </div>
+                <div id="manualpick" class="panel-collapse collapse">
+                    <div class="panel-body">
+                        <form>
+                            <div class="form-group">
+                                <label for="states_select">State</label>
+                                <select id="states_select"></select>
+                            </div>
+                            <div class="form-group">
+                                <label for="cities_select">City</label>
+                                <select id="cities_select"></select>
+                            </div>
+                            <div class="form-group">
+                                <input type="submit" id="go_button_manual" class="btn btn-success" value="Go">
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section id="pano_div" class="row">
+        </section>
+    </main>
 </div>
-<div id="pano_div"></div>
-<script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false">
-</script>
+
+<script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+<script src="js/bootstrap.min.js"></script>
 <script src='cities.js'></script>
 <script>
-    (function () {
+    $(function () {
         var cityIndex, stateIndex;
         var title_div = document.getElementById("title_div");
         var controls_div = document.getElementById("controls_div");
@@ -86,7 +86,8 @@
         var largeCities_checkBox = document.getElementById("largeCities_checkBox");
         var showCityName_checkBox = document.getElementById("showCityName_checkBox");
         var cityName_label = document.getElementById("cityName_label");
-        var go_button = document.getElementById("go_button");
+        var go_button_auto = document.getElementById("go_button_auto");
+        var go_button_manual = document.getElementById("go_button_manual");
         var largeCities = [
             ['SanFrancisco', 'CA'],
             ['Washington', 'DC'],
@@ -98,26 +99,9 @@
         ];
 
         // Initialization
-
-        /*     pano_div.setAttribute("style",
-         "height: calc(100vh - " +
-         (104 + title_div.offsetHeight) +
-         "px); width: calc(100vw - " +
-         (104 + controls_div.offsetWidth) +
-         "px)");
-         console.log(title_div.offsetHeight);
-         console.log(pano_div.offsetHeight);*/
-        random_radioButton.checked = true;
         largeCities_checkBox.checked = true;
         showCityName_checkBox.checked = false;
-        function enableRandomCity(enabled) {
-            states_select.disabled = enabled;
-            cities_select.disabled = enabled;
-            largeCities_checkBox.disabled = !enabled;
-            showCityName_checkBox.disabled = !enabled;
-        }
 
-        enableRandomCity(true);
         function populateStates() {
             for (var i = 0; i < cityData.length; i++) {
                 var stateOption = document.createElement("option");
@@ -127,6 +111,7 @@
         }
 
         populateStates();
+
         function updateCities() {
             cities_select.length = 0;
             for (var j = 0; j < cityData[states_select.selectedIndex].cities.length; j++) {
@@ -137,6 +122,7 @@
         }
 
         updateCities();
+
         function getRandomInt(min, max) {
             return Math.floor(Math.random() * (max - min)) + min;
         }
@@ -151,7 +137,7 @@
         function getPano(latLng, rad) {
             console.log('Trying ' + latLng.lat + ', ' + latLng.lng + ' with radius=' + rad);
             sv.getPanoramaByLocation(latLng, rad, function (data, status) {
-                if (status == google.maps.StreetViewStatus.OK) {
+                if (status === google.maps.StreetViewStatus.OK) {
                     var panoramaOptions = {
                         position: data.location.latLng,
                         pov: {
@@ -179,14 +165,24 @@
             cities_select.selectedIndex = cityIndex;
         }
 
-        function loadMap() {
+        var loadMapAuto = function (e) {
+            e.preventDefault();
+            loadMap(true);
+        };
+
+        var loadMapManual = function (e) {
+            e.preventDefault();
+            loadMap(false);
+        };
+
+        function loadMap(auto) {
             var city, state;
-            if (random_radioButton.checked) {
+            if (auto === true) {
                 largeCityIndex = getRandomInt(0, largeCities.length);
                 for (var i = 0; i < cityData.length; i++) {
-                    if (cityData[i].name == largeCities[largeCityIndex][1]) {
+                    if (cityData[i].name === largeCities[largeCityIndex][1]) {
                         for (var j = 0; j < cityData[i].cities.length; j++) {
-                            if (cityData[i].cities[j].name == largeCities[largeCityIndex][0]) {
+                            if (cityData[i].cities[j].name === largeCities[largeCityIndex][0]) {
                                 stateIndex = i;
                                 cityIndex = j;
                                 break;
@@ -215,15 +211,6 @@
         }
 
         // Event Listeners
-        states_select.addEventListener("change", function (e) {
-            updateCities(e.target)
-        }, false);
-        random_radioButton.addEventListener("click", function () {
-            enableRandomCity(true);
-        }, false);
-        choose_radioButton.addEventListener("click", function () {
-            enableRandomCity(false);
-        }, false);
         showCityName_checkBox.addEventListener("click", function () {
             if (showCityName_checkBox.checked) {
                 cityName_label.style.display = 'block';
@@ -232,9 +219,15 @@
                 cityName_label.style.display = 'none';
             }
         }, false);
-        go_button.addEventListener("click", loadMap, false);
-        cities_select.addEventListener("change", loadMap, false);
-    }());
+        var $go_button_auto = $("#go_button_auto");
+        $go_button_auto.click(loadMapAuto);
+
+        states_select.addEventListener("change", function (e) {
+            updateCities(e.target)
+        }, false);
+        cities_select.addEventListener("change", loadMapManual, false);
+        $("#go_button_manual").click(loadMapManual);
+    });
 </script>
 </body>
 </html>
