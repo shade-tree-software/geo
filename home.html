@@ -69,12 +69,14 @@
     </main>
 </div>
 
-<script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
+<script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAACKUGiigEMNoyaPuEaUzGxi7xCClfhr0&callback=initialize">
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
 <script src="js/bootstrap.min.js"></script>
 <script src='cities.js'></script>
 <script>
-    $(function () {
+    function initialize() {
         var cityIndex, stateIndex;
         var title_div = document.getElementById("title_div");
         var controls_div = document.getElementById("controls_div");
@@ -227,7 +229,7 @@
         }, false);
         cities_select.addEventListener("change", loadMapManual, false);
         $("#go_button_manual").click(loadMapManual);
-    });
+    }
 </script>
 </body>
 </html>
